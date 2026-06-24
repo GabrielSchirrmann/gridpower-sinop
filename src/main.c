@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 #include "grafo.h"
 
 // Calcula a distância em km entre dois pontos (lat/lon) na superfície da Terra.
@@ -42,11 +43,11 @@ Grafo* ler_grafo(const char* caminho) {
     // ---- lê os vertices ----
     for (int i = 0; i < g->num_vertices; i++) {
         fscanf(arquivo, "%d %s %s %lf %lf",
-               &g->vertices[i].id,
-               g->vertices[i].nome,
-               g->vertices[i].tipo,
-               &g->vertices[i].lat,
-               &g->vertices[i].lon);
+            &g->vertices[i].id,
+            g->vertices[i].nome,
+            g->vertices[i].tipo,
+            &g->vertices[i].lat,
+            &g->vertices[i].lon);
         g->vertices[i].lista_adj = NULL;
     }
 
@@ -78,6 +79,92 @@ Grafo* ler_grafo(const char* caminho) {
     return g;
 }
 
+// Encontra a rota de menor distância da origem até todos os outros vértices.
+void dijkstra(Grafo* g, int origem) {
+    int n = g->num_vertices;
+
+    // ---- as três estruturas que a rubrica pede ----
+    double* dist = malloc(n * sizeof(double));
+    int* prev = malloc(n * sizeof(int));
+    int* visitado = malloc(n * sizeof(int));
+
+    // ---- inicialização ----
+    for (int i = 0; i < n; i++) {
+        dist[i] = DBL_MAX;   // "infinito": ninguém foi alcançado ainda
+        prev[i] = -1;        // ninguém tem predecessor ainda
+        visitado[i] = 0;     // ninguém foi visitado ainda
+    }
+    dist[origem] = 0.0;      // distância da origem até ela mesma é zero
+
+    // ---- loop principal: repete uma vez para cada vértice ----
+    for (int passo = 0; passo < n; passo++) {
+
+        // (1) acha o vértice não-visitado com menor dist
+        int u = -1;
+        double menor = DBL_MAX;
+        for (int i = 0; i < n; i++) {
+            if (!visitado[i] && dist[i] < menor) {
+                menor = dist[i];
+                u = i;
+            }
+        }
+
+        // se não achou ninguém alcançável, encerra
+        if (u == -1) break;
+
+        // (2) marca como visitado
+        visitado[u] = 1;
+
+        // (3) relaxa todas as arestas de u
+        No* atual = g->vertices[u].lista_adj;
+        while (atual != NULL) {
+            int v = atual->destino;
+            double peso = atual->peso;
+
+            if (!visitado[v] && dist[u] + peso < dist[v]) {
+                dist[v] = dist[u] + peso;
+                prev[v] = u;
+            }
+            atual = atual->prox;
+        }
+    }
+
+    // ---- imprime os resultados ----
+    printf("\n=== Dijkstra a partir de [%d] %s ===\n\n",
+        origem, g->vertices[origem].nome);
+
+    for (int i = 0; i < n; i++) {
+        printf("Ate [%d] %s: ", i, g->vertices[i].nome);
+
+        if (dist[i] == DBL_MAX) {
+            printf("inalcancavel\n");
+        } else {
+            printf("%.2f km | caminho: ", dist[i]);
+
+            // reconstrói o caminho de trás pra frente
+            int caminho[100];
+            int tam = 0;
+            int atual_no = i;
+            while (atual_no != -1) {
+                caminho[tam] = atual_no;
+                tam++;
+                atual_no = prev[atual_no];
+            }
+            // imprime invertido (da origem ao destino)
+            for (int j = tam - 1; j >= 0; j--) {
+                printf("%d", caminho[j]);
+                if (j > 0) printf(" -> ");
+            }
+            printf("\n");
+        }
+    }
+
+    // ---- libera a memória das três estruturas ----
+    free(dist);
+    free(prev);
+    free(visitado);
+}
+
 int main(void) {
     Grafo* g = ler_grafo("data/rede_sinop.csv");
     if (g == NULL) {
@@ -98,6 +185,8 @@ int main(void) {
             atual = atual->prox;
         }
     }
+
+dijkstra(g, 0);  // calcula rotas a partir da SE_Sinop_Eletronorte
 
     // libera a memória
     for (int i = 0; i < g->num_vertices; i++) {
