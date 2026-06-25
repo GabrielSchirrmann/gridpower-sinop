@@ -1,11 +1,11 @@
 #ifndef GRAFO_H
 #define GRAFO_H
 
-//----Estrutura de nó da lista de adjecência (uma aresta)----
+// ---- Estrutura de um nó da lista de adjacência (uma aresta) ----
 typedef struct No {
-    int destino;   //índice do vértice vizinho 
-    double peso;   // distância (km) calculada pelo Haversine
-    struct No*prox;   // ponteiro pro próximo vizinho na lista
+    int destino;
+    double peso;
+    struct No* prox;
 } No;
 
 // ---- Estrutura de um vértice ----
@@ -15,14 +15,19 @@ typedef struct {
     char tipo[20];
     double lat;
     double lon;
-    No* lista_adj; // ponteiro para a lista de vizinhos
+    No* lista_adj;
 } Vertice;
 
 // ---- Estrutura do grafo inteiro ----
 typedef struct {
     int num_vertices;
     int num_arestas;
-    Vertice* vertices; // vetor de vértices (alocado dinamicamente)
+    Vertice* vertices;
 } Grafo;
+
+// ---- operações do grafo ----
+Grafo* ler_grafo(const char* caminho);
+void imprimir_grafo(Grafo* g);
+void liberar_grafo(Grafo* g);
 
 #endif
