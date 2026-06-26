@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "grafo.h"
 #include "haversine.h"
+
+int vertice_eh_fonte(Grafo* g, int i) {
+    return strcmp(g->vertices[i].tipo, "TRANSMISSAO") == 0 ||
+        strcmp(g->vertices[i].tipo, "GERADORA") == 0;
+}
 
 Grafo* ler_grafo(const char* caminho) {
     FILE* arquivo = fopen(caminho, "r");

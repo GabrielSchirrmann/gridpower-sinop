@@ -30,4 +30,6 @@ Grafo* ler_grafo(const char* caminho);
 void imprimir_grafo(Grafo* g);
 void liberar_grafo(Grafo* g);
 
+int vertice_eh_fonte(Grafo* g, int i);
+
 #endif
